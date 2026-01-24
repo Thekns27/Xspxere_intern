@@ -70,7 +70,7 @@ model CategoriesOnPosts {
 model Tags {
   id     Int  @id @default(autoincrement())
   postId Int
-  post   Post @relation(references: [id], fields: [postId])
+  post   Post @relation(references: [id], fields: [postId],onDelete: Cascade)
   userId Int
   user   User @relation(references: [id], fields: [userId])
 

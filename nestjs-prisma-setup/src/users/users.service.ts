@@ -14,11 +14,9 @@ export class UserService {
         name: dto.name,
         password: dto.password,
         roles: dto.roles,
-        ...(dto.referralUserId && {
-          referralUser: {
-            connect: { id: dto.referralUserId },
-          },
-        }),
+        referralUser: dto.referralUserId ? {
+          connect: {id: dto.referralUserId}
+        }:undefined,
         profile: {
           create: {
             profileImageUrl: dto.profileImageUrl,

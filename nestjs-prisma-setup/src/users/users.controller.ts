@@ -15,12 +15,13 @@ export class UsersController {
   //  @UseInterceptors(
   //   FileInterceptor('profileImage', {
   //     fileFilter: (req, file, cb) => {
-  //       // if (!file.mimetype.match(/image\/(PNG|JPG)/)) {
-  //       //   return cb(
-  //       //     new BadRequestException('Only JPG and PNG files are allowed'),
-  //       //     false,
-  //       //   );
-  //       // }
+  //       console.log("profileImageUrl")
+  //       if (!file.mimetype.match(/image\/(PNG|JPG)/)) {
+  //         return cb(
+  //           new BadRequestException('Only JPG and PNG files are allowed'),
+  //           false,
+  //         );
+  //       }
   //       cb(null, true);
   //     },
   //     storage: diskStorage({
@@ -33,12 +34,12 @@ export class UsersController {
   //   }),
   // )
   create(
-    @Body() createUserDto: CreateUserDto
+    @Body() createUserDto: CreateUserDto,
     // @UploadedFile(
     //   new ParseFilePipe({
     //     validators: [
     //       new MaxFileSizeValidator({ maxSize: 2 * 1024 * 1024 }),
-    //       // new FileTypeValidator({ fileType: /image\/(png|jpg)/ }),
+    //        new FileTypeValidator({ fileType: /image\/(png|jpg)/ }),
     //     ],
     //     fileIsRequired: true,
     //   }),

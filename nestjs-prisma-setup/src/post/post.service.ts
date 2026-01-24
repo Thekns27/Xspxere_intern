@@ -1,8 +1,4 @@
-import { create } from 'domain';
-import { HttpException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { DatabaseService } from 'src/database/database.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
@@ -52,64 +48,96 @@ export class PostService {
   }
 
   async findAll() {
-    return await this.dbService.post.findMany({
+    const posts = await this.dbService.post.findMany({
       include: {
         categoriesOnPosts: { include: { category: true } },
         tags: { include: { user: true } },
         author: true,
       },
     });
+    return {
+      message: 'find all posts success',
+      posts,
+    };
   }
+
   async findOne(id: number) {
-    const post = await this.dbService.post.findUnique({
-      where: { id },
-      include: {
-        categoriesOnPosts: true,
-        tags: true,
-      },
-    });
-    if (!post) throw new NotFoundException(`Post with ID ${id} not found`);
-    return post;
+    try {
+      const post = await this.dbService.post.findUnique({
+        where: { id },
+        include: {
+          categoriesOnPosts: true,
+          tags: true,
+        },
+      });
+      return post;
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError) {
+        if (e.code === 'P2025') {
+          throw new HttpException('postid not found', 400);
+        }
+      }
+      if (e instanceof Error) throw new HttpException(e.message, 400);
+    }
   }
 
   async update(id: number, updatePostDto: Partial<CreatePostDto>) {
-    return await this.dbService.post.update({
-      where: { id },
-      data: {
-        title: updatePostDto.title,
-        isPublished: updatePostDto.isPublished,
-        ...(updatePostDto.categoriesIds && {
-          categoriesOnPosts: {
-            deleteMany: {},
-            create: updatePostDto.categoriesIds.map((catId) => ({
-              category: { connect: { id: catId } },
-            })),
-          },
-        }),
-        ...(updatePostDto.tagUsersIds && {
-          tags: {
-            deleteMany: {},
-            create: updatePostDto.tagUsersIds.map((userId) => ({
-              user: { connect: { id: userId } },
-            })),
-          },
-        }),
-      },
-    });
-  }
-  // async delete(id: number) {
-  //   await this.dbService.categoriesOnPosts.deleteMany({
-  //     where: { postId: id },
-  //   });
-  //   return await this.dbService.post.delete({
-  //     where: { id },
-  //   });
-  // }
-  async  delete (id: number) {
-    const deletedPost = await this.dbService.post.delete({
-      where: {id}
-    })
-    return deletedPost;
+    try {
+      const updatedPost = await this.dbService.post.update({
+        where: { id },
+        data: {
+          title: updatePostDto.title,
+          isPublished: updatePostDto.isPublished,
+          categoriesOnPosts: updatePostDto.categoriesIds
+            ? {
+                deleteMany: {},
+                create: updatePostDto.categoriesIds.map((catId) => ({
+                  category: { connect: { id: catId } },
+                })),
+              }
+            : undefined,
+
+          tags: updatePostDto.tagUsersIds
+            ? {
+                deleteMany: {},
+                create: updatePostDto.tagUsersIds.map((userId) => ({
+                  user: { connect: { id: userId } },
+                })),
+              }
+            : undefined,
+        },
+      });
+
+      return {
+        message: 'update success',
+        updatedPost,
+      };
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError) {
+        if (e.code === 'P2025') {
+          throw new HttpException('postid not found', 400);
+        }
+      }
+      if (e instanceof Error) throw new HttpException(e.message, 400);
+    }
   }
 
+  async delete(id: number) {
+    try {
+      const deletedPost = await this.dbService.post.delete({
+        where: { id },
+      });
+      return {
+        message: 'delete success',
+        deletedPost,
+      };
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError) {
+        if (e.code === 'P2025') {
+          throw new HttpException('postid not found', 400);
+        }
+      }
+      if (e instanceof Error) throw new HttpException(e.message, 400);
+    }
+  }
 }

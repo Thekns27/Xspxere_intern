@@ -82,6 +82,6 @@ Ref: CategoriesOnPosts.postId > Post.id
 
 Ref: CategoriesOnPosts.categoryId > Category.id
 
-Ref: Tags.postId > Post.id
+Ref: Tags.postId > Post.id [delete: Cascade]
 
 Ref: Tags.userId > User.id

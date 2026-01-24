@@ -45,16 +45,18 @@ export class CreateUserDto {
   // profile?: Profile[];
 
   @IsOptional()
-  profileImageUrl?: string;
+  profileImageUrl?: any;
 
   @IsOptional()
   gender?: string;
 
   @IsOptional()
-  @IsInt()
+  @IsNumber()
+  @Transform(({ value }) => Number(value))
   age?: number;
 
  @IsOptional()
-  @IsInt()
+  @IsNumber()
+  @Transform(({ value }) => Number(value))
   referralUserId?: number;
 }
