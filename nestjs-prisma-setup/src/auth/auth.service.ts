@@ -1,3 +1,4 @@
+import { RegisterDto } from './dto/register.dto';
 import { CreateUserDto } from './../users/dto/create-user.dto';
 import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/users/users.service';
@@ -45,10 +46,7 @@ export class AuthService {
     const user = await this.userService.create({
       ...createUserDto,
       password: hashedPassword,
-      roles: ['User'],
-    },
-    createUserDto.profileImage
-    );
+    });
 
     const payload = {
       sub: user.id,
@@ -69,8 +67,6 @@ export class AuthService {
       access_token: this.jwtService.sign(payload),
     };
   }
-
-  async findAll() {
-    return this.userService.findAll();
   }
-}
+
+

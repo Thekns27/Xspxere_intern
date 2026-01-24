@@ -1,4 +1,5 @@
-import { IsEmail, IsNotEmpty, IsString, IsOptional, IsArray } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, IsOptional, IsArray, IsNumber } from 'class-validator';
+import { Profile } from 'src/profile/entities/profile.entity';
 
 export class RegisterDto {
   @IsEmail()
@@ -17,4 +18,13 @@ export class RegisterDto {
   @IsOptional()
   @IsArray()
   roles?: string[];
+
+  @IsOptional()
+  @IsArray()
+  profile?: Profile[];
+
+  @IsOptional()
+  @IsNumber()
+  referralUserId?: number;
+
 }

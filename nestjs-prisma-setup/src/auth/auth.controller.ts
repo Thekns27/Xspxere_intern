@@ -17,18 +17,17 @@ export class AuthController {
     return this.authService.login(LoginDto);
   }
 
-  @UseGuards(AuthGuard,RolesGuard)
+  //@UseGuards(AuthGuard,RolesGuard)
   @Post('register')
-  @Roles(['admin'])
+  //@Roles(['admin'])
   async register(@Body() dto: CreateUserDto) {
     return this.authService.register(dto);
   }
 
-
-  @Get('all-users')
-  @UseGuards(AuthGuard,RolesGuard)
-  @Roles(['Editor'])
-  async findAllUsers() {
-    return this.authService.findAll();
-  }
+  // @Get('all-users')
+  // @UseGuards(AuthGuard,RolesGuard)
+  // @Roles(['Editor'])
+  // async findAllUsers() {
+  //   return this.authService.findAll ();
+  // }
 }

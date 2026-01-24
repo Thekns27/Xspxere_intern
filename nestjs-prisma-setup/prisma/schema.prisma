@@ -1,12 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
+}
+
+generator dbml {
+  provider = "prisma-dbml-generator"
 }
 
 datasource db {
@@ -14,16 +12,20 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String
-  password  String
-  roles     String[]
-  profileId Int?     @unique
-  profile   Profile? @relation(references: [id], fields: [profileId], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             Int      @id @default(autoincrement())
+  email          String   @unique
+  name           String
+  password       String
+  roles          String[]
+  profileId      Int?     @unique
+  profile        Profile? @relation(references: [id], fields: [profileId], onDelete: Cascade)
+  posts          Post[]
+  referralUserId Int?
+  referralUser   User?    @relation("referralUser", references: [id], fields: [referralUserId])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  tags           Tags[]
+  referralUsers  User[]   @relation("referralUser")
 }
 
 model Profile {
@@ -33,6 +35,47 @@ model Profile {
   age             Int
   birthdate       DateTime
   user            User?
+}
+
+model Post {
+  id          Int     @id @default(autoincrement())
+  title       String
+  authorId    Int
+  author      User    @relation(references: [id], fields: [authorId])
+  isPublished Boolean @default(true)
+
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  tags              Tags[]
+  categoriesOnPosts CategoriesOnPosts[]
+}
+
+model Category {
+  id                Int                 @id @default(autoincrement())
+  name              String
+  categoriesOnPosts CategoriesOnPosts[]
+}
+
+model CategoriesOnPosts {
+  id         Int      @id @default(autoincrement())
+  postId     Int
+  post       Post     @relation(references: [id], fields: [postId])
+  categoryId Int
+  category   Category @relation(references: [id], fields: [categoryId])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Tags {
+  id     Int  @id @default(autoincrement())
+  postId Int
+  post   Post @relation(references: [id], fields: [postId])
+  userId Int
+  user   User @relation(references: [id], fields: [userId])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum GENDER {

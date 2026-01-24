@@ -13,6 +13,7 @@ export class DatabaseService
     if (!connectionString) {
       throw new Error('DATABASE_URL is not defined');
     }
+    console.log('Database connection string:', connectionString);
 
     const adapter = new PrismaPg({ connectionString });
 

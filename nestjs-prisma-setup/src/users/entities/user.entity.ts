@@ -1,3 +1,5 @@
+import { Post } from "src/post/entities/post.entity";
+import { Profile } from "src/profile/entities/profile.entity";
 
 
 
@@ -13,4 +15,9 @@ export class User {
   name: string;
   createdAt: Date;
   roles : string[];
+  profileId: number;
+  profile: Profile;
+  posts: Post[];
+  referralUserId: number;
+  referralUser: User;
 }

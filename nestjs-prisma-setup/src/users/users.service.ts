@@ -1,124 +1,85 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { DatabaseService } from 'src/database/database.service';
-import { User } from './entities/user.entity';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
+import { GENDER } from 'src/profile/dto/create-profile.dto';
 
 @Injectable()
 export class UserService {
-  constructor(private dbService: DatabaseService) {}
+  constructor(private readonly dbService: DatabaseService) {}
 
-   async create(createUserDto: CreateUserDto, imagePath: string) {
+  async create(dto: CreateUserDto) {
     const newUser = await this.dbService.user.create({
       data: {
-        name: createUserDto.name,
-        email: createUserDto.email,
-        password: createUserDto.password,
-        roles: createUserDto.roles,
+        email: dto.email,
+        name: dto.name,
+        password: dto.password,
+        roles: dto.roles,
+        ...(dto.referralUserId && {
+          referralUser: {
+            connect: { id: dto.referralUserId },
+          },
+        }),
         profile: {
           create: {
-            age: createUserDto.age,
-            birthdate: createUserDto.birthdate,
-            gender: createUserDto.gender,
-            profileImageUrl: imagePath,
+            profileImageUrl: dto.profileImageUrl,
+            gender: dto.gender as GENDER,
+            age: dto.age,
+            birthdate: new Date(dto.birthdate),
           },
         },
       },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        createdAt: true,
-        roles: true,
-        profile: {
-          select: {
-            age: true,
-            birthdate: true,
-            gender: true,
-            profileImageUrl: true,
-          },
-        }
-      },
+      include: { profile: true },
     });
     return newUser;
   }
 
-  async findAll(): Promise<{ message: string; users: User[] }> {
-    const users = await this.dbService.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        createdAt: true,
-        roles: true,
+  async findAll() {
+    return await this.dbService.user.findMany({
+      include: {
+        profile: true,
+        _count: { select: { posts: true } },
       },
     });
-    return {
-      message: 'fetch success',
-      users,
-    };
   }
 
   async findOne(id: number) {
-    try {
-      const user = await this.dbService.user.findUnique({
-        where: {
-          id,
-        },
-      });
-      if (!user) {
-        throw Error('User Not Found');
-      }
-
-      return user;
-    } catch (e) {
-      if (e instanceof PrismaClientKnownRequestError) {
-        if (e.code === 'p2025') {
-          throw new HttpException('user not found', 400);
-        }
-      }
-      if (e instanceof Error) throw new HttpException(e.message, 400);
-    }
+    const user = await this.dbService.user.findUnique({
+      where: { id },
+      include: {
+        profile: true,
+        referralUsers: true,
+        referralUser: true,
+        posts: true,
+      },
+    });
+    if (!user) throw new NotFoundException(`User with ID ${id} not found`);
+    return user;
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
-    try {
-      const updateUser = await this.dbService.user.update({
-        where: {
-          id,
+  async update(id: number, dto: Partial<CreateUserDto>) {
+    return await this.dbService.user.update({
+      where: { id },
+      data: {
+        email: dto.email,
+        name: dto.name,
+        roles: dto.roles,
+        profile: {
+          update: {
+            profileImageUrl: dto.profileImageUrl,
+            gender: dto.gender as GENDER,
+            age: dto.age,
+            birthdate: dto.birthdate ? new Date(dto.birthdate) : undefined,
+          },
         },
-        data: {
-          ...updateUserDto,
-        },
-      });
-      return updateUser;
-    } catch (e) {
-      if (e instanceof PrismaClientKnownRequestError) {
-        if (e.code === 'P2025') {
-          throw new HttpException('user not found', 400);
-        }
-      }
-      if (e instanceof Error) throw new HttpException(e.message, 400);
-    }
+      },
+      include: { profile: true },
+    });
   }
 
   async remove(id: number) {
-    try {
-      const deletedUser = await this.dbService.user.delete({
-        where: { id },
-      });
-      return deletedUser;
-    } catch (e) {
-      // console.log(e);
-      if (e instanceof PrismaClientKnownRequestError) {
-        if (e.code === 'P2025') {
-          throw new HttpException('user not found', 400);
-        }
-      }
-      if (e instanceof Error) throw new HttpException(e.message, 400);
-    }
+    return await this.dbService.user.delete({ where: { id } });
   }
+
   async findByEmail(email: string) {
     return this.dbService.user.findUnique({ where: { email } });
   }
