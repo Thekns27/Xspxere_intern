@@ -1,16 +1,12 @@
-import { GENDER } from 'generated/prisma/enums';
 import { Transform } from 'class-transformer';
 import {
   IsArray,
   IsDate,
   IsEmail,
-  IsEnum,
-  IsInt,
   IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
-import { Profile } from 'src/profile/entities/profile.entity';
 
 export class CreateUserDto {
   @IsString()
@@ -41,13 +37,11 @@ export class CreateUserDto {
   @Transform(({ value }) => new Date(value))
   birthdate: Date;
 
-  // @IsArray()
-  // profile?: Profile[];
-
   @IsOptional()
   profileImageUrl?: any;
 
   @IsOptional()
+  @IsString()
   gender?: string;
 
   @IsOptional()
@@ -55,7 +49,7 @@ export class CreateUserDto {
   @Transform(({ value }) => Number(value))
   age?: number;
 
- @IsOptional()
+  @IsOptional()
   @IsNumber()
   @Transform(({ value }) => Number(value))
   referralUserId?: number;

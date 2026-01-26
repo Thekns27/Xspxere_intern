@@ -6,10 +6,12 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { AuthGuard } from 'src/auth/guard/auth.guard';
 
 @Controller('post')
 export class PostController {
@@ -26,6 +28,7 @@ export class PostController {
   }
 
   @Get(':id')
+ // @UseGuards(AuthGuard)
   findOne(@Param('id') id: string) {
     return this.postService.findOne(+id);
   }

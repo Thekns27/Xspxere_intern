@@ -12,22 +12,22 @@ export enum GENDER {
 
 export class CreateProfileDto {
 
-  @IsString()
-  profileImageUrl: string;
+//   @IsString()
+//   profileImageUrl: string;
 
-  @IsEnum(GENDER)
-  gender: GENDER;
+//   @IsEnum(GENDER)
+//   gender: GENDER;
 
-  @IsNumber()
-  @Transform(({ value }) => Number(value))
-  age: number;
+//   @IsNumber()
+//   @Transform(({ value }) => Number(value))
+//   age: number;
 
-//   @IsDateString()
-//   birthdate: string;
- @IsDate()
-  @Transform(({ value }) => new Date(value))
-  birthdate: Date;
+// //   @IsDateString()
+// //   birthdate: string;
+//  @IsDate()
+//   @Transform(({ value }) => new Date(value))
+//   birthdate: Date;
 
-  user : User[];
+//   user : User[];
 
 }

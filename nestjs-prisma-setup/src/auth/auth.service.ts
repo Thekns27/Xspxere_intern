@@ -57,7 +57,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
     return {
-      message: 'registration success',
+      message: 'registration success!go to login',
       user: {
         id: user.id,
         email: user.email,

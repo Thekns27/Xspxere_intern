@@ -24,10 +24,10 @@ export class AuthController {
     return this.authService.register(dto);
   }
 
-  @Get('all-users')
-  @UseGuards(AuthGuard,RolesGuard)
-  @Roles(['Editor'])
-  async findAllUsers() {
-    return this.usersService.findAll ();
-  }
+  // @Get('all-users')
+  // @UseGuards(AuthGuard,RolesGuard)
+  // @Roles(['Editor'])
+  // async findAllUsers() {
+  //   return this.usersService.findAll ();
+  // }
 }
