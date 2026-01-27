@@ -9,7 +9,7 @@ import {
   IsString,
 } from 'class-validator';
 
-export class CreatePostDto {
+export class  CreatePostDto {
   @IsString()
   @IsNotEmpty()
   title: string;
@@ -20,6 +20,12 @@ export class CreatePostDto {
   authorId: number;
 
   @IsBoolean()
+  @IsNotEmpty()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
   isPublished: boolean;
 
   @IsArray()

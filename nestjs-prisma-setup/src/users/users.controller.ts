@@ -1,4 +1,18 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, BadRequestException, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseInterceptors,
+  BadRequestException,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserService } from './users.service';
@@ -7,47 +21,46 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 
 @Controller('users')
-
 export class UsersController {
   constructor(private readonly usersService: UserService) {}
 
   @Post()
-  //  @UseInterceptors(
-  //   FileInterceptor('profileImage', {
-  //     fileFilter: (req, file, cb) => {
-  //       console.log("profileImageUrl")
-  //       if (!file.mimetype.match(/image\/(PNG|JPG)/)) {
-  //         return cb(
-  //           new BadRequestException('Only JPG and PNG files are allowed'),
-  //           false,
-  //         );
-  //       }
-  //       cb(null, true);
-  //     },
-  //     storage: diskStorage({
-  //       destination: './uploads',
-  //       filename: (req, file, cb) => {
-  //         const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
-  //         cb(null, uniqueName + extname(file.originalname));
-  //       },
-  //     }),
-  //   }),
-  // )
+  @UseInterceptors(
+    FileInterceptor('profileImageUrl', {
+      fileFilter: (req, file, cb) => {
+        console.log('profileImageUrl');
+        if (!file.mimetype.match(/image\/(png|jpg|jpeg)/)) {
+          return cb(
+            new BadRequestException('Only JPG and PNG files are allowed'),
+            false,
+          );
+        }
+        cb(null, true);
+      },
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, cb) => {
+          const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, uniqueName + extname(file.originalname));
+        },
+      }),
+    }),
+  )
   create(
     @Body() createUserDto: CreateUserDto,
-    // @UploadedFile(
-    //   new ParseFilePipe({
-    //     validators: [
-    //       new MaxFileSizeValidator({ maxSize: 2 * 1024 * 1024 }),
-    //        new FileTypeValidator({ fileType: /image\/(png|jpg)/ }),
-    //     ],
-    //     fileIsRequired: true,
-    //   }),
-    // )
-    // profileImage: Express.Multer.File,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 2 * 1024 * 1024 }),
+          // new FileTypeValidator({ fileType: /image\/(png|jpg)/ }),
+        ],
+        fileIsRequired: true,
+      }),
+    )
+    profileImage: Express.Multer.File,
   ) {
-   // console.log(profileImage,createUserDto)
-    return this.usersService.create(createUserDto);
+    console.log(profileImage, createUserDto);
+    return this.usersService.create(createUserDto, profileImage);
   }
 
   @Get()

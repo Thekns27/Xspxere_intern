@@ -7,59 +7,62 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 export class PostService {
   constructor(private readonly dbService: DatabaseService) {}
 
-  async create(createPostDto: CreatePostDto) {
-    try {
-      const newPost = await this.dbService.post.create({
-        data: {
-          title: createPostDto.title,
-          authorId: createPostDto.authorId,
-          isPublished: createPostDto.isPublished,
-          categoriesOnPosts: createPostDto.categoriesIds
-            ? {
-                create: createPostDto.categoriesIds.map((id) => ({
-                  category: { connect: { id } },
-                })),
-              }
-            : undefined,
-          tags: createPostDto.tagUsersIds
-            ? {
-                create: createPostDto.tagUsersIds.map((id) => ({
-                  user: { connect: { id } },
-                })),
-              }
-            : undefined,
-        },
-        select: {
-          id: true,
-          title: true,
-          authorId: true,
-          isPublished: true,
-          createdAt: true,
-          updatedAt: true,
-          categoriesOnPosts: { include: { category: true } },
-          tags: { include: { user: true } },
-        },
-      });
+  // async create2(createPostDto: CreatePostDto) {
+  //   try {
+  //     const newPost = await this.dbService.post.create({
+  //       data: {
+  //         title: createPostDto.title,
+  //         authorId: createPostDto.authorId,
+  //         isPublished: createPostDto.isPublished,
+  //         categoriesOnPosts: createPostDto.categoriesIds
+  //           ? {
+  //               create: createPostDto.categoriesIds.map((id) => ({
+  //                 category: { connect: { id } },
+  //               })),
+  //             }
+  //           : undefined,
+  //         tags: createPostDto.tagUsersIds
+  //           ? {
+  //               create: createPostDto.tagUsersIds.map((id) => ({
+  //                 user: { connect: { id } },
+  //               })),
+  //             }
+  //           : undefined,
+  //       },
+  //       select: {
+  //         id: true,
+  //         title: true,
+  //         authorId: true,
+  //         isPublished: true,
+  //         createdAt: true,
+  //         updatedAt: true,
+  //         categoriesOnPosts: { include: { category: true } },
+  //         tags: { include: { user: true } },
+  //       },
+  //     });
 
-      return { message: 'create success', post: newPost };
-    } catch (e) {
-      if (e instanceof PrismaClientKnownRequestError) {
-        if (e.code === 'P2003') {
-          throw new HttpException(
-            `AuthorId ${createPostDto.authorId} not found`,
-            400,
-          );
-        }
-        if (e.code === 'P2025') {
-          throw new HttpException('Related categoriesIds or tagUsersIds not found', 400);
-        }
-      }
-      console.error('Create post error:', e);
-      throw new HttpException('Internal server error', 500);
-    }
-  }
+  //     return { message: 'create success', post: newPost };
+  //   } catch (e) {
+  //     if (e instanceof PrismaClientKnownRequestError) {
+  //       if (e.code === 'P2003') {
+  //         throw new HttpException(
+  //           `AuthorId ${createPostDto.authorId} not found`,
+  //           400,
+  //         );
+  //       }
+  //       if (e.code === 'P2025') {
+  //         throw new HttpException(
+  //           'Related categoriesIds or tagUsersIds not found',
+  //           400,
+  //         );
+  //       }
+  //     }
+  //     console.error('Create post error:', e);
+  //     throw new HttpException('Internal server error', 500);
+  //   }
+  // }
 
-  // async create(createPostDto: CreatePostDto) {
+  // async create1(createPostDto: CreatePostDto) {
   //   try {
   //     const checkAuthorId = await this.dbService.post.findUnique({
   //       where: { id: createPostDto.authorId },
@@ -104,6 +107,80 @@ export class PostService {
   //     if (e instanceof Error) throw new HttpException(e.message, 400);
   //   }
   // }
+  async create(
+    createPostDto: CreatePostDto,
+    files: Array<Express.Multer.File>,
+  ) {
+    try {
+      const userExists = await this.dbService.user.findUnique({
+        where: { id: createPostDto.authorId },
+      });
+
+      if (!userExists) {
+        throw new HttpException('Author not found', 404);
+      }
+
+      const imageNames =
+        files?.map((file) => ({
+          postImageUrl: file.filename,
+        })) || [];
+
+      const newPost = await this.dbService.post.create({
+        data: {
+          title: createPostDto.title,
+          authorId: createPostDto.authorId,
+          isPublished: createPostDto.isPublished,
+          categoriesOnPosts: {
+            create: createPostDto.categoriesIds?.map((id) => ({
+              category: { connect: { id } },
+            })),
+          },
+          tags: {
+            create: createPostDto.tagUsersIds?.map((id) => ({
+              user: { connect: { id } },
+            })),
+          },
+          postImage: {
+            create: imageNames,
+          },
+        },
+        include: {
+          categoriesOnPosts: { include: { category: true } },
+          tags: { include: { user: true } },
+          postImage: true,
+        },
+        // select: {
+        //   id: true,
+        //   title: true,
+        //   authorId: true,
+        //   isPublished: true,
+        //   createdAt: true,
+        //   updatedAt: true,
+        //   categoriesOnPosts: { include: { category: true } },
+        //   tags: { include: { user: true } },
+        //   postImage: true,
+        // }
+      });
+      return { message: 'Post Create success', post: newPost };
+    } catch (e) {
+      if (e instanceof PrismaClientKnownRequestError) {
+        if (e.code === 'P2003') {
+          throw new HttpException(
+            `AuthorId ${createPostDto.authorId} not found`,
+            400,
+          );
+        }
+        if (e.code === 'P2025') {
+          throw new HttpException(
+            'Related categoriesIds or tagUsersIds not found',
+            400,
+          );
+        }
+      }
+      console.error('Create post error:', e);
+      throw new HttpException('Internal server error', 500);
+    }
+  }
 
   async findAll() {
     const posts = await this.dbService.post.findMany({
@@ -111,6 +188,7 @@ export class PostService {
         categoriesOnPosts: { include: { category: true } },
         tags: { include: { user: true } },
         author: true,
+        postImage: true,
       },
     });
     return {

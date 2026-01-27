@@ -38,6 +38,7 @@ Table Post {
   updatedAt DateTime [not null]
   tags Tags [not null]
   categoriesOnPosts CategoriesOnPosts [not null]
+  postImage PostImage [not null]
 }
 
 Table Category {
@@ -66,6 +67,13 @@ Table Tags {
   updatedAt DateTime [not null]
 }
 
+Table PostImage {
+  id Int [pk, increment]
+  postImageUrl String [not null]
+  postId Int [not null]
+  post Post [not null]
+}
+
 Enum GENDER {
   MALE
   FEMALE
@@ -85,3 +93,5 @@ Ref: CategoriesOnPosts.categoryId > Category.id
 Ref: Tags.postId > Post.id [delete: Cascade]
 
 Ref: Tags.userId > User.id
+
+Ref: PostImage.postId > Post.id [delete: Cascade]

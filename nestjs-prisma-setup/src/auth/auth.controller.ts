@@ -6,6 +6,7 @@ import { LoginDto } from './dto/login.dto';
 import { Roles } from './guard/role.decorator';
 import { RolesGuard } from './guard/roles.guard';
 import { AuthGuard } from './guard/auth.guard';
+import { profile } from 'console';
 
 @Controller('auth')
 export class AuthController {
@@ -21,7 +22,7 @@ export class AuthController {
   @Post('register')
   @Roles(['admin'])
   async register(@Body() dto: CreateUserDto) {
-    return this.authService.register(dto);
+    return this.authService.register( dto);
   }
 
   // @Get('all-users')

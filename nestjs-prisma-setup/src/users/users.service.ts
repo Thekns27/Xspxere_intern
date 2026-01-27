@@ -42,13 +42,8 @@ export class UserService {
   //     if (e instanceof Error) throw new HttpException(e.message, 400);
   //   }
   // }
-  async create(dto: CreateUserDto) {
+  async create(dto: CreateUserDto,file?: Express.Multer.File) {
   try {
-    const birthdate = new Date(dto.birthdate);
-    if (isNaN(birthdate.getTime())) {
-      throw new HttpException('Invalid birthdate', 400);
-    }
-
     const newUser = await this.dbService.user.create({
       data: {
         email: dto.email,
@@ -60,10 +55,10 @@ export class UserService {
           : undefined,
         profile: {
           create: {
-            profileImageUrl: dto.profileImageUrl,
+            profileImageUrl: file.filename,
             gender: dto.gender as GENDER,
             age: dto.age,
-            birthdate,
+            birthdate: new Date(dto.birthdate),
           },
         },
       },
@@ -81,7 +76,7 @@ export class UserService {
         throw new HttpException('Email already exists', 409);
       }
     }
-
+    console.log(e)
     throw new HttpException(
       e instanceof Error ? e.message : 'User creation failed',
       400,
@@ -176,5 +171,40 @@ export class UserService {
 
   async findById(id: number) {
     return this.dbService.user.findUnique({ where: { id } });
+  }
+
+   async create1(createUserDto: CreateUserDto, imagePath: string) {
+    const newUser = await this.dbService.user.create({
+      data: {
+        name: createUserDto.name,
+        email: createUserDto.email,
+        password: createUserDto.password,
+        roles: createUserDto.roles,
+        profile: {
+          create: {
+            age: createUserDto.age,
+            birthdate: createUserDto.birthdate,
+            gender: createUserDto.gender as GENDER,
+            profileImageUrl: imagePath,
+          },
+        },
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        roles: true,
+        profile: {
+          select: {
+            age: true,
+            birthdate: true,
+            gender: true,
+            profileImageUrl: true,
+          },
+        }
+      },
+    });
+    return newUser;
   }
 }

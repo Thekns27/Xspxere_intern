@@ -24,7 +24,7 @@ export class CreateUserDto {
   )
   roles: string[];
 
-  // profileImage: any;
+   profileImage?: any;
 
   // @IsEnum(GENDER)
   // gender: GENDER;

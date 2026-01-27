@@ -36,7 +36,7 @@ export class AuthService {
     };
   }
 
-  async register(createUserDto:CreateUserDto) {
+  async register(createUserDto:CreateUserDto){ {
     const existingUser = await this.userService.findByEmail(createUserDto.email);
     if (existingUser) {
       throw new ConflictException('Email already exists!use another email');
@@ -68,5 +68,39 @@ export class AuthService {
     };
   }
   }
+  async register2(createUserDto:CreateUserDto) {
+    const existingUser = await this.userService.findByEmail(createUserDto.email);
+    if (existingUser) {
+      throw new ConflictException('Email already exists!use another email');
+    }
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
+    const user = await this.userService.create({
+      ...createUserDto,
+      password: hashedPassword,
+      roles: ['User'],
+    },
+    createUserDto.profileImage
+    );
+
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      roles: createUserDto.roles,
+    };
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    return {
+      message: 'registration success',
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        createdAt: user.createdAt,
+      },
+      access_token: this.jwtService.sign(payload),
+    };
+  }
+}
 
