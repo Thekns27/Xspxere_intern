@@ -19,11 +19,15 @@ import { UserService } from './users.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { ApiBadRequestResponse, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UserService) {}
 
+   @ApiOperation({summary: 'Used to create a new User'})
+    @ApiResponse({status: 201,description:'User created',type: CreateUserDto})
+    @ApiBadRequestResponse({description:'Bad payload sent'})
   @Post()
   @UseInterceptors(
     FileInterceptor('profileImageUrl', {
@@ -63,21 +67,27 @@ export class UsersController {
     return this.usersService.create(createUserDto, profileImage);
   }
 
+
+   @ApiOperation({summary: 'Used to find all User'})
   @Get()
   findAll() {
     return this.usersService.findAll();
   }
 
+  @ApiOperation({summary: 'Used to find user with id'})
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(+id);
   }
 
+  @ApiOperation({summary: 'Used to update User with id'})
+  @ApiResponse({status: 201,description:'User updated success',type: UpdateUserDto})
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(+id, updateUserDto);
   }
 
+  @ApiOperation({summary: 'Used to delete User with id'})
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);

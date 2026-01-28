@@ -9,81 +9,99 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFiles,
-  BadRequestException,
-  UploadedFile,
   ParseFilePipe,
   MaxFileSizeValidator,
-  FileTypeValidator,
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { UploadService } from 'src/upload/upload.service';
+import { createMulterConfig } from 'src/upload/multer.config';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
+@ApiTags('Post')
+@ApiBearerAuth()
 @Controller('post')
 export class PostController {
-  constructor(private readonly postService: PostService) {}
+  constructor(
+    private readonly postService: PostService,
+    private uploadService: UploadService,
+  ) {}
 
-  // @Post()
-  // create(@Body() createPostDto: CreatePostDto) {
-  //   return this.postService.create(createPostDto);
-  // }
-
+  @ApiOperation({ summary: 'Used to find all Post' })
+  @ApiOkResponse({ description: 'Get all Post' })
   @Get()
   findAll() {
     return this.postService.findAll();
   }
 
+  @ApiOperation({ summary: 'used to find Post with id' })
   @Get(':id')
- // @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   findOne(@Param('id') id: string) {
     return this.postService.findOne(+id);
   }
 
+  @ApiOperation({ summary: 'used to update Post with id' })
   @Patch(':id')
   update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
     return this.postService.update(+id, updatePostDto);
   }
 
+  @ApiOperation({ summary: 'used to delete Post with id' })
   @Delete(':id')
   delete(@Param('id') postId: string) {
     return this.postService.delete(+postId);
   }
 
-//   @Post()
-// @UseInterceptors(FilesInterceptor('images'))
-// async create(
-//   @Body() createPostDto: CreatePostDto,
-//   @UploadedFiles() files: Array<Express.Multer.File>
-// ) {
-//   return this.postService.create(createPostDto,files);
-// }
- @Post()
-   @UseInterceptors(
-    FilesInterceptor('post_images',20, {
-      fileFilter: (req, file, cb) => {
-        //console.log("profileImageUrl")
-        if (!file.mimetype.match(/image\/(png|jpg|jpeg)/)) {
-          return cb(
-            new BadRequestException('Only JPG and PNG files are allowed'),
-            false,
-          );
-        }
-        cb(null, true);
-      },
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (req, file, cb) => {
-          const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          cb(null, uniqueName + extname(file.originalname));
-        },
-      }),
-    }),
+  @ApiOperation({ summary: 'Used to create a new post' })
+  @ApiResponse({
+    status: 201,
+    description: 'Post created',
+    type: CreatePostDto,
+  })
+  @ApiBadRequestResponse({ description: 'Bad payload sent' })
+  @Post()
+  //  @UseInterceptors(
+  //   FilesInterceptor('post_images',5, {
+  //     fileFilter: (req, file, cb) => {
+  //console.log("profileImageUrl")
+  //       if (!file.mimetype.match(/image\/(png|jpg|jpeg)/)) {
+  //         return cb(
+  //           new BadRequestException('Only JPG and PNG files are allowed'),
+  //           false,
+  //         );
+  //       }
+  //       cb(null, true);
+  //     },
+  //     storage: diskStorage({
+  //       destination: './uploads',
+  //       filename: (req, file, cb) => {
+  //         const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
+  //         cb(null, uniqueName + extname(file.originalname));
+  //       },
+  //     }),
+  //   }),
+  // )
+  @UseGuards(AuthGuard)
+  @Post()
+  @UseInterceptors(
+    FilesInterceptor(
+      'post_images',
+      2,
+      createMulterConfig(2, ['png', 'jpg', 'jpeg', 'mp4']),
+    ),
   )
-  create(
+  async create(
     @Body() postDto: CreatePostDto,
     @UploadedFiles(
       new ParseFilePipe({
@@ -96,7 +114,7 @@ export class PostController {
     )
     profileImage: Express.Multer.File[],
   ) {
-   console.log(profileImage,postDto)
-    return this.postService.create(postDto,profileImage);
+    console.log(profileImage, postDto);
+    return this.postService.create(postDto, profileImage);
   }
 }

@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 
 import {
@@ -9,14 +10,19 @@ import {
   IsString,
 } from 'class-validator';
 
-export class  CreatePostDto {
+export class CreatePostDto {
   @IsString()
   @IsNotEmpty()
+  @ApiProperty({
+    description: 'The name of the title',
+    example: 'title One',
+  })
   title: string;
 
   @IsNumber()
   @IsNotEmpty()
   @Transform(({ value }) => Number(value))
+  @ApiProperty({ example: '1' })
   authorId: number;
 
   @IsBoolean()
@@ -26,6 +32,7 @@ export class  CreatePostDto {
     if (value === 'false') return false;
     return value;
   })
+  @ApiProperty({ example: true })
   isPublished: boolean;
 
   @IsArray()
@@ -39,6 +46,7 @@ export class  CreatePostDto {
     }
     return value;
   })
+  @ApiProperty({ example: '[1,2]' })
   categoriesIds?: number[];
 
   @IsArray()
@@ -52,5 +60,6 @@ export class  CreatePostDto {
     }
     return value;
   })
+  @ApiProperty({ example: '[1]' })
   tagUsersIds?: number[];
 }

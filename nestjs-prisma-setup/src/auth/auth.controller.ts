@@ -7,7 +7,9 @@ import { Roles } from './guard/role.decorator';
 import { RolesGuard } from './guard/roles.guard';
 import { AuthGuard } from './guard/auth.guard';
 import { profile } from 'console';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService, private usersService: UserService) {}
