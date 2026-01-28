@@ -2,6 +2,9 @@ import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { DatabaseService } from 'src/database/database.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
+import { GetAllPost } from './dto/getAllpost.dto';
+import { Post } from './entities/post.entity';
+
 
 @Injectable()
 export class PostService {
@@ -181,8 +184,7 @@ export class PostService {
       throw new HttpException('Internal server error', 500);
     }
   }
-
-  async findAll() {
+  async findAll1(authorId: number,query:GetAllPost):Promise<{message:string,data,pagination}> {
     const posts = await this.dbService.post.findMany({
       include: {
         categoriesOnPosts: { include: { category: true } },
@@ -190,11 +192,76 @@ export class PostService {
         author: true,
         postImage: true,
       },
+       orderBy: {
+          id: 'asc',
+        },
+        take: query.take,
+        skip: query.skip,
+      });
+      const totalCount = await this.dbService.post.count({
+        where: {authorId},
     });
     return {
       message: 'find all posts success',
-      posts,
+      data:posts,
+      pagination: {
+          currentPage: query.pageNumber,
+          currentPageSize: posts.length,
+          totalPage: Math.ceil(totalCount / query.pageSize),
+          totalCount: totalCount,
+        },
     };
+  }
+
+ async findAll(
+    authorId: number,
+    query: GetAllPost,
+  ): Promise<{ message: string; data; pagination }> {
+    try {
+      console.log(query.skip, query.take);
+      console.log(query);
+      const posts = await this.dbService.post.findMany({
+        where: { authorId },
+        select: {
+          id: true,
+          title: true,
+          authorId: true,
+          isPublished: true,
+          postImage: true,
+          categoriesOnPosts: { select: { category: true } },
+          tags: {
+            select: {
+              user: {
+                select: { id: true, name: true },
+              },
+            },
+          },
+        },
+        orderBy: {
+          id: 'asc',
+        },
+        take: query.take,
+        skip: query.skip,
+      });
+      const totalCount = await this.dbService.post.count({
+        where: { authorId },
+      });
+      return {
+        message: 'fetch success!',
+        data:posts,
+        pagination: {
+          currentPage: query.pageNumber,
+          currentPageSize: posts.length,
+          totalPage: Math.ceil(totalCount / query.pageSize),
+          totalCount: totalCount,
+        },
+      };
+    } catch (error) {
+      console.log(error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+    }
   }
 
   async findOne(id: number) {

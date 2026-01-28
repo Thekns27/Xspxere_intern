@@ -3,6 +3,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { DatabaseService } from 'src/database/database.service';
 import { GENDER } from 'src/profile/dto/create-profile.dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
+import { GetAllPost } from 'src/post/dto/getAllpost.dto';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
@@ -85,13 +87,30 @@ export class UserService {
 }
 
 
-  async findAll() {
-    return await this.dbService.user.findMany({
+  async findAll(authorId:number,query:GetAllPost) {
+    const allUser= await this.dbService.user.findMany({
       include: {
         profile: true,
         _count: { select: { posts: true } },
       },
+       orderBy: {
+          id: 'asc',
+        },
+        take: query.take,
+        skip: query.skip,
+      });
+      const totalCount = await this.dbService.post.count({
+        where: {authorId},
     });
+    return {
+      allUser,
+       pagination: {
+          currentPage: query.pageNumber,
+          currentPageSize: allUser.length,
+          totalPage: Math.ceil(totalCount / query.pageSize),
+          totalCount: totalCount,
+        },
+    };
   }
 
   async findOne(id: number) {

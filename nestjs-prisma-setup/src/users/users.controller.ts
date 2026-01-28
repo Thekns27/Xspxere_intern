@@ -12,6 +12,9 @@ import {
   ParseFilePipe,
   MaxFileSizeValidator,
   FileTypeValidator,
+  Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -19,8 +22,12 @@ import { UserService } from './users.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import { ApiBadRequestResponse, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { GetAllPost } from 'src/post/dto/getAllpost.dto';
+import { AuthGuard } from 'src/auth/guard/auth.guard';
 
+@ApiTags('User')
+@ApiBearerAuth()
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UserService) {}
@@ -68,10 +75,17 @@ export class UsersController {
   }
 
 
-   @ApiOperation({summary: 'Used to find all User'})
+   @UseGuards(AuthGuard)
+  @ApiOperation({summary: 'Used to find all User'})
+  @ApiOperation({ summary: 'Used to find all User' })
+  @ApiResponse({status: 201,description:'user findAll success',type: GetAllPost})
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  findAll(
+    @Query() query:GetAllPost,
+    @Req() req,
+  ) {
+    const authorId = req.user.id;
+    return this.usersService.findAll(authorId,query);
   }
 
   @ApiOperation({summary: 'Used to find user with id'})

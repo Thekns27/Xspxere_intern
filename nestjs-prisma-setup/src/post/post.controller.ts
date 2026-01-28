@@ -11,6 +11,8 @@ import {
   UploadedFiles,
   ParseFilePipe,
   MaxFileSizeValidator,
+  Req,
+  Query,
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -27,6 +29,8 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { GetAllPost } from './dto/getAllpost.dto';
+
 
 @ApiTags('Post')
 @ApiBearerAuth()
@@ -39,9 +43,25 @@ export class PostController {
 
   @ApiOperation({ summary: 'Used to find all Post' })
   @ApiOkResponse({ description: 'Get all Post' })
+  @ApiResponse({status: 201,description:'post findAll success',type: GetAllPost})
+  
   @Get()
-  findAll() {
-    return this.postService.findAll();
+  @UseGuards(AuthGuard)
+findAll(
+  @Query() query: GetAllPost,
+  @Req() req,
+) {
+  const authorId = req.user.id;
+  console.log(authorId)
+  return this.postService.findAll(authorId, query);
+}
+
+
+  @Get()
+  findAll1(@Req() req, @Query() query: GetAllPost) {
+    const authorId = +req.user.id;
+    console.log(authorId);
+    return this.postService.findAll(authorId,query);
   }
 
   @ApiOperation({ summary: 'used to find Post with id' })
@@ -71,6 +91,7 @@ export class PostController {
   })
   @ApiBadRequestResponse({ description: 'Bad payload sent' })
   @Post()
+
   //  @UseInterceptors(
   //   FilesInterceptor('post_images',5, {
   //     fileFilter: (req, file, cb) => {
