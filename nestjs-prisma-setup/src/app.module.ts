@@ -9,9 +9,26 @@ import { PostModule } from './post/post.module';
 import { TagsModule } from './tags/tags.module';
 import { CategoriesOnPostsModule } from './categories-on-posts/categories-on-posts.module';
 import { ProfileModule } from './profile/profile.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  imports: [DatabaseModule,UsersModule, AuthModule, CategoriesModule, PostModule, TagsModule, CategoriesOnPostsModule, ProfileModule],
+  imports: [
+    DatabaseModule,
+    UsersModule,
+    AuthModule,
+    CategoriesModule,
+    PostModule,
+    TagsModule,
+    CategoriesOnPostsModule,
+    ProfileModule,
+    ScheduleModule.forRoot(
+      {
+      cronJobs: true,
+      intervals: false,
+      timeouts: true,
+      }
+    ),
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

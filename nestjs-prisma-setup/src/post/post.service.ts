@@ -4,6 +4,7 @@ import { DatabaseService } from 'src/database/database.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { GetAllPost } from './dto/getAllpost.dto';
 import { Post } from './entities/post.entity';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 
 @Injectable()
@@ -184,6 +185,7 @@ export class PostService {
       throw new HttpException('Internal server error', 500);
     }
   }
+
   async findAll1(authorId: number,query:GetAllPost):Promise<{message:string,data,pagination}> {
     const posts = await this.dbService.post.findMany({
       include: {
@@ -343,7 +345,9 @@ export class PostService {
           throw new HttpException('postid not found', 400);
         }
       }
+      console.log("error message:" + e)
       if (e instanceof Error) throw new HttpException(e.message, 400);
     }
   }
+
 }

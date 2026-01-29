@@ -32,7 +32,7 @@ import {
 import { GetAllPost } from './dto/getAllpost.dto';
 
 
-@ApiTags('Post')
+//@ApiTags('Post')
 @ApiBearerAuth()
 @Controller('post')
 export class PostController {
@@ -78,8 +78,10 @@ findAll(
   }
 
   @ApiOperation({ summary: 'used to delete Post with id' })
+ @UseGuards(AuthGuard)
   @Delete(':id')
   delete(@Param('id') postId: string) {
+    console.log(postId)
     return this.postService.delete(+postId);
   }
 

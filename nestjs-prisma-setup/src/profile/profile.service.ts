@@ -24,4 +24,5 @@ export class ProfileService {
   remove(id: number) {
     return `This action removes a #${id} profile`;
   }
+  
 }
