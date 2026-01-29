@@ -11,26 +11,26 @@ export class AppService {
     return 'Hello World!';
   }
 
-@Cron(CronExpression.EVERY_MINUTE)
-async backUpDB() {
-  console.log("Starting check ispulished is true?...")
+// @Cron(CronExpression.EVERY_MINUTE)
+// async backUpDB() {
+//   console.log("Starting check ispulished is true?...")
 
-  const toEditTime = new Date(Date.now() - 180000)
+//   const toEditTime = new Date(Date.now() - 180000)
 
-  return this.dbService.post.updateMany({
-    where: {
-      isScheduled: false,
-      isPublished: true,
-      createdAt: {
-        lte: toEditTime,
-      },
-    },
-    data: {
-      isPublished: false,
-      isScheduled: true,
-      scheduledAt: new Date().toISOString(),
-    },
-  })
-}
+//   return this.dbService.post.updateMany({
+//     where: {
+//       isScheduled: false,
+//       isPublished: true,
+//       createdAt: {
+//         lte: toEditTime,
+//       },
+//     },
+//     data: {
+//       isPublished: false,
+//       isScheduled: true,
+//       scheduledAt: new Date().toISOString(),
+//     },
+//   })
+// }
 
 }

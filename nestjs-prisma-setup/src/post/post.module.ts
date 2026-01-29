@@ -4,6 +4,7 @@ import { PostController } from './post.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { UploadModule } from 'src/upload/upload.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { TaskService } from 'src/service/task_service';
 
 @Module({
   imports : [
@@ -15,7 +16,7 @@ import { ScheduleModule } from '@nestjs/schedule';
         }),
   ],
   controllers: [PostController],
-  providers: [PostService],
+  providers: [PostService,TaskService],
   exports: [PostService],
 })
 export class PostModule {}

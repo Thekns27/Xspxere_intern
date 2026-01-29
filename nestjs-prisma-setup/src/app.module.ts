@@ -21,11 +21,12 @@ import { ScheduleModule } from '@nestjs/schedule';
     TagsModule,
     CategoriesOnPostsModule,
     ProfileModule,
+    TagsModule,
     ScheduleModule.forRoot(
       {
       cronJobs: true,
-      intervals: false,
-      timeouts: true,
+     // intervals: false,
+     // timeouts: true,
       }
     ),
   ],
