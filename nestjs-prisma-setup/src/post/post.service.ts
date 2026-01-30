@@ -1,11 +1,16 @@
-import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  HttpException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { DatabaseService } from 'src/database/database.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { GetAllPost } from './dto/getAllpost.dto';
 import { Post } from './entities/post.entity';
 import { Cron, CronExpression } from '@nestjs/schedule';
-
+import { getSystemErrorMessage } from 'util';
 
 @Injectable()
 export class PostService {
@@ -121,9 +126,18 @@ export class PostService {
       });
 
       if (!userExists) {
-        throw new HttpException('Author not found', 404);
+        throw new NotFoundException('Author not found');
       }
 
+      // if (!createPostDto.authorId) {
+      //   throw new NotFoundException('Invalid author id!');
+      // }
+
+      if (createPostDto.tagUsersIds.includes(createPostDto.authorId)) {
+        throw new ConflictException(
+          'Authors cannot tag themselves on their own post! ',
+        );
+      }
       const imageNames =
         files?.map((file) => ({
           postImageUrl: file.filename,
@@ -150,7 +164,7 @@ export class PostService {
         },
         include: {
           categoriesOnPosts: { include: { category: true } },
-          tags: { include: { user: true } },
+          tags: { include: { user: true  } },
           postImage: true,
         },
         // select: {
@@ -171,7 +185,7 @@ export class PostService {
         if (e.code === 'P2003') {
           throw new HttpException(
             `AuthorId ${createPostDto.authorId} not found`,
-            400,
+            404,
           );
         }
         if (e.code === 'P2025') {
@@ -182,11 +196,14 @@ export class PostService {
         }
       }
       console.error('Create post error:', e);
-      throw new HttpException('Internal server error', 500);
+      throw new HttpException('Internal server error', 500, { cause: getSystemErrorMessage });
     }
   }
 
-  async findAll1(authorId: number,query:GetAllPost):Promise<{message:string,data,pagination}> {
+  async findAll1(
+    authorId: number,
+    query: GetAllPost,
+  ): Promise<{ message: string; data; pagination }> {
     const posts = await this.dbService.post.findMany({
       include: {
         categoriesOnPosts: { include: { category: true } },
@@ -194,28 +211,28 @@ export class PostService {
         author: true,
         postImage: true,
       },
-       orderBy: {
-          id: 'asc',
-        },
-        take: query.take,
-        skip: query.skip,
-      });
-      const totalCount = await this.dbService.post.count({
-        where: {authorId},
+      orderBy: {
+        id: 'asc',
+      },
+      take: query.take,
+      skip: query.skip,
+    });
+    const totalCount = await this.dbService.post.count({
+      where: { authorId },
     });
     return {
       message: 'find all posts success',
-      data:posts,
+      data: posts,
       pagination: {
-          currentPage: query.pageNumber,
-          currentPageSize: posts.length,
-          totalPage: Math.ceil(totalCount / query.pageSize),
-          totalCount: totalCount,
-        },
+        currentPage: query.pageNumber,
+        currentPageSize: posts.length,
+        totalPage: Math.ceil(totalCount / query.pageSize),
+        totalCount: totalCount,
+      },
     };
   }
 
- async findAll(
+  async findAll(
     authorId: number,
     query: GetAllPost,
   ): Promise<{ message: string; data; pagination }> {
@@ -250,7 +267,7 @@ export class PostService {
       });
       return {
         message: 'fetch success!',
-        data:posts,
+        data: posts,
         pagination: {
           currentPage: query.pageNumber,
           currentPageSize: posts.length,
@@ -345,9 +362,8 @@ export class PostService {
           throw new HttpException('postid not found', 400);
         }
       }
-      console.log("error message:" + e)
+      console.log('error message:' + e);
       if (e instanceof Error) throw new HttpException(e.message, 400);
     }
   }
-
 }

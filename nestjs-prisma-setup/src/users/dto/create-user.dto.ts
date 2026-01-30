@@ -61,14 +61,14 @@ export class CreateUserDto {
     description: 'birthdate',
     example: '1998-10-12',
   })
-  birthdate: Date;
+  birthdate?: Date;
 
   @IsOptional()
     @ApiProperty({
     description: 'The name of the file',
     example: 'photo.jpg',
   })
-  profileImageUrl?: any;
+  profileImageUrl ?: any;
 
   @IsOptional()
   @IsString()

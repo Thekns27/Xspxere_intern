@@ -20,12 +20,11 @@ export class AuthController {
     return this.authService.login(LoginDto);
   }
 
-  // @UseGuards(AuthGuard,RolesGuard)
-  // @Post('register')
-  // @Roles(['admin'])
-  // async register(@Body() dto: CreateUserDto) {
-  //   return this.authService.register( dto);
-  // }
+  @Post('register')
+  @Roles(['admin'])
+  async register(@Body() dto: CreateUserDto) {
+    return this.authService.register( dto);
+  }
 
   // @Get('all-users')
   // @UseGuards(AuthGuard,RolesGuard)
