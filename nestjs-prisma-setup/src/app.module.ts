@@ -6,10 +6,12 @@ import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { CategoriesModule } from './categories/categories.module';
 import { PostModule } from './post/post.module';
-import { TagsModule } from './tags/tags.module';
 import { CategoriesOnPostsModule } from './categories-on-posts/categories-on-posts.module';
 import { ProfileModule } from './profile/profile.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { TagsModule } from './tags/tags.module';
+import { GatewaysModule } from './gateways/gateways.module';
+import { TaskModule } from './cron-schedule/task.module';
 
 @Module({
   imports: [
@@ -19,9 +21,9 @@ import { ScheduleModule } from '@nestjs/schedule';
     CategoriesModule,
     PostModule,
     TagsModule,
+    TaskModule,
     CategoriesOnPostsModule,
     ProfileModule,
-    TagsModule,
     ScheduleModule.forRoot(
       {
       cronJobs: true,
@@ -29,6 +31,8 @@ import { ScheduleModule } from '@nestjs/schedule';
      // timeouts: true,
       }
     ),
+   TagsModule,
+   GatewaysModule,
   ],
   controllers: [AppController],
   providers: [AppService],

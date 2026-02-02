@@ -8,6 +8,7 @@ import { RolesGuard } from './guard/roles.guard';
 import { AuthGuard } from './guard/auth.guard';
 import { profile } from 'console';
 import { ApiTags } from '@nestjs/swagger';
+import { RegisterDto } from './dto/register.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -16,14 +17,21 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  signIn(@Body() LoginDto: LoginDto) {
-    return this.authService.login(LoginDto);
+  signIn(@Body() dto: LoginDto) {
+    console.log(dto.email,dto.password)
+    return this.authService.login(dto);
+  }
+
+  @Post('register1')
+  @Roles(['admin'])
+  async register1(@Body() dto: CreateUserDto) {
+    return this.authService.register( dto);
   }
 
   @Post('register')
-  @Roles(['admin'])
-  async register(@Body() dto: CreateUserDto) {
-    return this.authService.register( dto);
+  //@Roles(['admin'])
+  async register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
   }
 
   // @Get('all-users')

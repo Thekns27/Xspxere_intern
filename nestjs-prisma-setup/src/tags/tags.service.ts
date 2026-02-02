@@ -1,8 +1,9 @@
 import { HttpException, Injectable } from '@nestjs/common';
-import { CreateTagDto } from './dto/create-tag.dto';
 import { DatabaseService } from 'src/database/database.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
-import { UpdateTagDto } from './dto/update-tag.dto';
+import { CreateTagDto } from './dto/create-tags-dto';
+import { UpdateTagDto } from './dto/update-tags-dto';
+
 
 @Injectable()
 export class TagsService {

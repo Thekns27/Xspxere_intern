@@ -8,6 +8,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import { GENDER } from 'generated/prisma/enums';
 
 export class CreateUserDto {
   @IsString()
@@ -76,7 +77,7 @@ export class CreateUserDto {
     description: 'gender',
     example: 'MALE',
   })
-  gender?: string;
+  gender?: GENDER;
 
   @IsOptional()
   @IsNumber()

@@ -1,23 +1,30 @@
 import { RegisterDto } from './dto/register.dto';
-import { CreateUserDto } from './../users/dto/create-user.dto';
 import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/users/users.service';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { DatabaseService } from 'src/database/database.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private dbService: DatabaseService,
   ) {}
 
   async login(loginDto: LoginDto) {
     const user = await this.userService.findByEmail(loginDto.email);
-    if (!user || user.password !== loginDto.password) {
-      throw new UnauthorizedException('wrong password or email');
+    console.log(user)
+    if (!user) {
+      throw new UnauthorizedException('user not found');
     }
+    // if (user.password !== loginDto.password) {
+    //   console.log(user.password);
+    //   console.log(loginDto.password)
+    //   throw new UnauthorizedException('invalid password');
+    // }
 
     const payload = {
       sub: user.id,
@@ -25,77 +32,83 @@ export class AuthService {
       roles: user.roles,
     };
     return {
-      message: 'login success',
+      message: 'login successful',
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
+        role: user.roles,
         createdAt: user.createdAt,
       },
       access_token: this.jwtService.sign(payload),
     };
   }
 
-  async register(createUserDto:CreateUserDto){ {
-    const existingUser = await this.userService.findByEmail(createUserDto.email);
+
+  async register(dto: RegisterDto) {
+   // const { email, name, password, referralUserId } = dto
+
+    const existingUser = await this.dbService.user.findUnique({
+      where: { email:dto.email }
+    })
+
     if (existingUser) {
-      throw new ConflictException('Email already exists!use another email');
+      throw new ConflictException('Email already exists')
     }
-     const saltRounds = 10;
-     const hashedPassword = await bcrypt.hash(createUserDto.password, saltRounds);
 
-    const user = await this.userService.create({
-      ...createUserDto,
-      password: hashedPassword,
-    });
+    const hashedPassword = await bcrypt.hash(dto.password, 10)
 
-    const payload = {
+    const user = await this.dbService.user.create({
+      data: {
+        email:dto.email,
+        name: dto.name,
+        password: hashedPassword,
+        roles: dto.roles,
+        referralUserId: dto.referralUserId ?? null
+      }
+    })
+
+    const token = await this.jwtService.signAsync({
       sub: user.id,
-      email: user.email,
-      password:createUserDto.password,
-      roles: createUserDto.roles,
-    };
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+      roles: user.roles
+    })
+
     return {
-      message: 'registration success!go to login',
+      message: 'User registered successfully!go to login',
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
-        createdAt: user.createdAt,
+        roles: user.roles
       },
-      access_token: this.jwtService.sign(payload),
-    };
-  }
+      token
+    }
   }
 
-  // async register2(registerDto:RegisterDto) {
-  //   const existingUser = await this.userService.findByEmail(registerDto.email);
+  // async register2(createUserDto:CreateUserDto){ {
+  //   const existingUser = await this.userService.findByEmail(createUserDto.email);
   //   if (existingUser) {
   //     throw new ConflictException('Email already exists!use another email');
   //   }
-  //   const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+  //    const saltRounds = 10;
+  //    const hashedPassword = await bcrypt.hash(createUserDto.password, saltRounds);
 
   //   const user = await this.userService.create({
-  //     ...registerDto,
+  //     ...createUserDto,
   //     password: hashedPassword,
-  //     roles:createUserDto.roles,
-  //   },
-  //   createUserDto.profileImageUrl
-  //   );
+  //   });
 
   //   const payload = {
   //     sub: user.id,
   //     email: user.email,
+  //     password:createUserDto.password,
   //     roles: createUserDto.roles,
   //   };
   //   if (!user) {
   //     throw new UnauthorizedException('Invalid credentials');
   //   }
   //   return {
-  //     message: 'registration success',
+  //     message: 'registration success!go to login',
   //     user: {
   //       id: user.id,
   //       email: user.email,
@@ -105,5 +118,43 @@ export class AuthService {
   //     access_token: this.jwtService.sign(payload),
   //   };
   // }
+  // }
+
+  // async login2(dto: LoginDto) {
+  //  // const { email, password } = dto
+
+  //   const user = await this.dbService.user.findUnique({
+  //     where: { email:dto.email }
+  //   })
+
+  //   if (!user) {
+  //     throw new UnauthorizedException('Invalid credentials')
+  //   }
+
+  //   const isPasswordValid = await bcrypt.compare(dto.password, user.password)
+
+  //   if (!isPasswordValid) {
+  //     throw new UnauthorizedException('Invalid credentials')
+  //   }
+
+  //   const token = await this.jwtService.signAsync({
+  //     sub: user.id,
+  //     email: user.email,
+  //     roles: user.roles
+  //   })
+
+  //   return {
+  //     message: 'Login successful',
+  //      user: {
+  //       id: user.id,
+  //       email: user.email,
+  //       name: user.name,
+  //       roles: user.roles,
+  //       createdAt: user.createdAt
+  //     },
+  //     access_token : token,
+  //   }
+  // }
 }
+
 

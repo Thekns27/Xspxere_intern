@@ -8,114 +8,15 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { DatabaseService } from 'src/database/database.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { GetAllPost } from './dto/getAllpost.dto';
-import { Post } from './entities/post.entity';
-import { Cron, CronExpression } from '@nestjs/schedule';
 import { getSystemErrorMessage } from 'util';
+import { NotiGateways } from 'src/gateways/noti.gateway';
 
 @Injectable()
 export class PostService {
-  constructor(private readonly dbService: DatabaseService) {}
+  constructor(private readonly dbService: DatabaseService,
+    private readonly notiGateways: NotiGateways,
 
-  // async create2(createPostDto: CreatePostDto) {
-  //   try {
-  //     const newPost = await this.dbService.post.create({
-  //       data: {
-  //         title: createPostDto.title,
-  //         authorId: createPostDto.authorId,
-  //         isPublished: createPostDto.isPublished,
-  //         categoriesOnPosts: createPostDto.categoriesIds
-  //           ? {
-  //               create: createPostDto.categoriesIds.map((id) => ({
-  //                 category: { connect: { id } },
-  //               })),
-  //             }
-  //           : undefined,
-  //         tags: createPostDto.tagUsersIds
-  //           ? {
-  //               create: createPostDto.tagUsersIds.map((id) => ({
-  //                 user: { connect: { id } },
-  //               })),
-  //             }
-  //           : undefined,
-  //       },
-  //       select: {
-  //         id: true,
-  //         title: true,
-  //         authorId: true,
-  //         isPublished: true,
-  //         createdAt: true,
-  //         updatedAt: true,
-  //         categoriesOnPosts: { include: { category: true } },
-  //         tags: { include: { user: true } },
-  //       },
-  //     });
-
-  //     return { message: 'create success', post: newPost };
-  //   } catch (e) {
-  //     if (e instanceof PrismaClientKnownRequestError) {
-  //       if (e.code === 'P2003') {
-  //         throw new HttpException(
-  //           `AuthorId ${createPostDto.authorId} not found`,
-  //           400,
-  //         );
-  //       }
-  //       if (e.code === 'P2025') {
-  //         throw new HttpException(
-  //           'Related categoriesIds or tagUsersIds not found',
-  //           400,
-  //         );
-  //       }
-  //     }
-  //     console.error('Create post error:', e);
-  //     throw new HttpException('Internal server error', 500);
-  //   }
-  // }
-
-  // async create1(createPostDto: CreatePostDto) {
-  //   try {
-  //     const checkAuthorId = await this.dbService.post.findUnique({
-  //       where: { id: createPostDto.authorId },
-  //     });
-  //     if (checkAuthorId.authorId === null) {
-  //       throw new HttpException('author Id not found', 400);
-  //     }
-  //     const newPost = await this.dbService.post.create({
-  //       data: {
-  //         title: createPostDto.title,
-  //         authorId: createPostDto.authorId,
-  //         isPublished: createPostDto.isPublished,
-  //         categoriesOnPosts: {
-  //           create: createPostDto.categoriesIds?.map((id) => ({
-  //             category: { connect: { id } },
-  //           })),
-  //         },
-  //         tags: {
-  //           create: createPostDto.tagUsersIds?.map((id) => ({
-  //             user: { connect: { id } },
-  //           })),
-  //         },
-  //       },
-  //       select: {
-  //         id: true,
-  //         title: true,
-  //         authorId: true,
-  //         isPublished: true,
-  //         createdAt: true,
-  //         updatedAt: true,
-  //         categoriesOnPosts: { include: { category: true } },
-  //         tags: { include: { user: true } },
-  //       },
-  //     });
-  //     return { message: 'create success', post: newPost };
-  //   } catch (e) {
-  //     if (e instanceof PrismaClientKnownRequestError) {
-  //       if (e.code === 'P2025') {
-  //         throw new HttpException('authorId  not found', 400);
-  //       }
-  //     }
-  //     if (e instanceof Error) throw new HttpException(e.message, 400);
-  //   }
-  // }
+  ) {}
   async create(
     createPostDto: CreatePostDto,
     files: Array<Express.Multer.File>,
@@ -125,13 +26,9 @@ export class PostService {
         where: { id: createPostDto.authorId },
       });
 
-      if (!userExists) {
+      if (userExists === undefined) {
         throw new NotFoundException('Author not found');
       }
-
-      // if (!createPostDto.authorId) {
-      //   throw new NotFoundException('Invalid author id!');
-      // }
 
       if (createPostDto.tagUsersIds.includes(createPostDto.authorId)) {
         throw new ConflictException(
@@ -179,7 +76,8 @@ export class PostService {
         //   postImage: true,
         // }
       });
-      return { message: 'Post Create success', post: newPost };
+    this.notiGateways.notifyNewPost(newPost, createPostDto.authorId);
+     return { message: 'Post Create success', post: newPost };
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError) {
         if (e.code === 'P2003') {
@@ -366,4 +264,5 @@ export class PostService {
       if (e instanceof Error) throw new HttpException(e.message, 400);
     }
   }
+
 }

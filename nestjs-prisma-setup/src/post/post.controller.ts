@@ -44,7 +44,6 @@ export class PostController {
   @ApiOperation({ summary: 'Used to find all Post' })
   @ApiOkResponse({ description: 'Get all Post' })
   @ApiResponse({status: 201,description:'post findAll success',type: GetAllPost})
-  
   @Get()
   @UseGuards(AuthGuard)
 findAll(
@@ -92,29 +91,6 @@ findAll(
     type: CreatePostDto,
   })
   @ApiBadRequestResponse({ description: 'Bad payload sent' })
-  @Post()
-
-  //  @UseInterceptors(
-  //   FilesInterceptor('post_images',5, {
-  //     fileFilter: (req, file, cb) => {
-  //console.log("profileImageUrl")
-  //       if (!file.mimetype.match(/image\/(png|jpg|jpeg)/)) {
-  //         return cb(
-  //           new BadRequestException('Only JPG and PNG files are allowed'),
-  //           false,
-  //         );
-  //       }
-  //       cb(null, true);
-  //     },
-  //     storage: diskStorage({
-  //       destination: './uploads',
-  //       filename: (req, file, cb) => {
-  //         const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
-  //         cb(null, uniqueName + extname(file.originalname));
-  //       },
-  //     }),
-  //   }),
-  // )
   @UseGuards(AuthGuard)
   @Post()
   @UseInterceptors(
@@ -140,4 +116,36 @@ findAll(
     console.log(profileImage, postDto);
     return this.postService.create(postDto, profileImage);
   }
+
+  // @Post()
+  // async create(@Body() body: any) {
+  //   const { userId, content } = body;
+  //   return this.postsService.createPost(userId, content);
+  // }
+
+
+  //  @UseInterceptors(
+  //   FilesInterceptor('post_images',5, {
+  //     fileFilter: (req, file, cb) => {
+  //console.log("profileImageUrl")
+  //       if (!file.mimetype.match(/image\/(png|jpg|jpeg)/)) {
+  //         return cb(
+  //           new BadRequestException('Only JPG and PNG files are allowed'),
+  //           false,
+  //         );
+  //       }
+  //       cb(null, true);
+  //     },
+  //     storage: diskStorage({
+  //       destination: './uploads',
+  //       filename: (req, file, cb) => {
+  //         const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
+  //         cb(null, uniqueName + extname(file.originalname));
+  //       },
+  //     }),
+  //   }),
+  // )
+
+
 }
+
