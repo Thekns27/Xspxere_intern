@@ -1,48 +1,58 @@
 import {
   WebSocketGateway,
   WebSocketServer,
-  SubscribeMessage,
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { CreatePostDto } from 'src/post/dto/create-post.dto';
 
-@WebSocketGateway(3002, { namespace: 'noti' })
+@WebSocketGateway(3002, { namespace: 'notifications' })
 export class NotiGateways implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  // userId -> socketId
-  private onlineUsers = new Map<number, string>();
+  private getnotiUser = new Map<number, string>();
 
   handleConnection(client: Socket) {
-    console.log('Client connected:', client.id);
+    const userId = Number(client.handshake.query.userId);
+    if (userId) {
+      this.getnotiUser.set(userId, client.id);
+      console.log(`User ${userId} connected with socket ${client.id}`);
+    }
   }
 
   handleDisconnect(client: Socket) {
-    for (const [userId, socketId] of this.onlineUsers) {
+    for (const [userId, socketId] of this.getnotiUser.entries()) {
       if (socketId === client.id) {
-        this.onlineUsers.delete(userId);
+        this.getnotiUser.delete(userId);
+        console.log(`User ${userId} disconnected`);
+        break;
       }
     }
-    console.log('Client disconnected:', client.id);
   }
 
-  @SubscribeMessage('user-online')
-  handleUserOnline(client: Socket, userId: number) {
-    this.onlineUsers.set(userId, client.id);
-    console.log('Online users:', this.onlineUsers);
-  }
-
-  notifyNewPost(post: CreatePostDto, authorId: number) {
-    this.onlineUsers.forEach((socketId, userId) => {
+  notifyNewPost(postData: CreatePostDto, authorId: number) {
+    this.getnotiUser.forEach((socketId, userId) => {
       if (userId !== authorId) {
         this.server.to(socketId).emit('new-post-notification', {
-          message: 'New post created',
-          post,
+          message: `New post createBy ${userId}`,
+          postTitle: postData.title,
+          authorId: authorId,
         });
       }
     });
   }
+
+  //   notifyNewPost(post: any) {
+  //   post.tags.forEach((tag) => {
+  //     const targetSocketId = this.getnotiUser.get(tag.userId);
+  //     if (targetSocketId) {
+  //       this.server.to(targetSocketId).emit('tag-notification', {
+  //         message: `New post tagged by ${tag.user.name}`,
+  //         postId: post.id
+  //       });
+  //     }
+  //   });
+  // }
 }

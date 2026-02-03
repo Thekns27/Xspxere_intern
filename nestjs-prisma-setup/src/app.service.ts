@@ -4,7 +4,6 @@ import { DatabaseService } from './database/database.service';
 
 @Injectable()
 export class AppService {
-//  private readonly logger = new Logger(AppService.name);
  constructor(private readonly dbService: DatabaseService){}
 
   getHello(): string {

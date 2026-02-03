@@ -1,13 +1,17 @@
-import { HttpException, Injectable } from '@nestjs/common';
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { DatabaseService } from 'src/database/database.service';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { GetAllPost } from 'src/post/dto/getAllpost.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { BullService } from 'src/bull/bull.service';
+import { HttpException, Injectable } from '@nestjs/common';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 
 @Injectable()
-export class UserService {
-  constructor(private readonly dbService: DatabaseService) {}
+export class UserService {cl
+  constructor(private readonly dbService: DatabaseService,
+    private readonly bullservice:BullService
+  ) {}
 
   async create(dto: CreateUserDto, file?: Express.Multer.File) {
     try {
@@ -29,9 +33,14 @@ export class UserService {
             },
           },
         },
-        include: { profile: true },
+        // include: { profile: true },
       });
 
+      await this.bullservice.sendWelcomeEmail({
+        email: dto.email,
+        name: dto.name,
+      });
+      console.log(`email sending to ${dto.email}`)
       return newUser;
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError) {
@@ -50,6 +59,77 @@ export class UserService {
       );
     }
   }
+  /**
+   *constructor(private readonly emailService: EmailService) {}
+
+async createUser(dto: CreateUserDto) {
+  const user = await this.userRepository.save(dto);
+
+  await this.emailService.sendUserCreatedEmail({
+    email: user.email,
+    name: user.name,
+  });
+
+  return user;
+}
+
+constructor(
+  private readonly dbService: DatabaseService,
+  private readonly bullService: BullService,
+) {}
+
+async create(dto: CreateUserDto, file?: Express.Multer.File) {
+  try {
+    const newUser = await this.dbService.user.create({
+      data: {
+        email: dto.email,
+        name: dto.name,
+        password: dto.password,
+        roles: dto.roles,
+        referralUser: dto.referralUserId
+          ? { connect: { id: dto.referralUserId } }
+          : undefined,
+        profile: {
+          create: {
+            profileImageUrl: file?.filename,
+            gender: dto.gender,
+            age: dto.age,
+            birthdate: new Date(dto.birthdate),
+          },
+        },
+      },
+    });
+
+    // 🔥 enqueue welcome email (non-blocking)
+    this.bullService.sendWelcomeEmail({
+      email: newUser.email,
+      name: newUser.name,
+    }).catch(err => {
+      console.error('Failed to enqueue welcome email:', err);
+    });
+
+    return newUser;
+  } catch (e) {
+    if (e instanceof PrismaClientKnownRequestError) {
+      if (e.code === 'P2025') {
+        throw new HttpException('Referral user not found', 400);
+      }
+
+      if (e.code === 'P2002') {
+        throw new HttpException('Email already exists', 409);
+      }
+    }
+
+    console.error(e);
+    throw new HttpException(
+      e instanceof Error ? e.message : 'User creation failed',
+      400,
+    );
+  }
+}
+
+
+   */
 
   async findAll(authorId: number, query: GetAllPost) {
     const allUser = await this.dbService.user.findMany({

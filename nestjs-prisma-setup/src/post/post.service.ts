@@ -30,7 +30,7 @@ export class PostService {
         throw new NotFoundException('Author not found');
       }
 
-      if (createPostDto.tagUsersIds.includes(createPostDto.authorId)) {
+      if (createPostDto.tagUsersIds?.includes(createPostDto.authorId)) {
         throw new ConflictException(
           'Authors cannot tag themselves on their own post! ',
         );
@@ -77,6 +77,7 @@ export class PostService {
         // }
       });
     this.notiGateways.notifyNewPost(newPost, createPostDto.authorId);
+
      return { message: 'Post Create success', post: newPost };
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError) {

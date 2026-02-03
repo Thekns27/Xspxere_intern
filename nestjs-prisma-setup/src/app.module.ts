@@ -12,6 +12,9 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { TagsModule } from './tags/tags.module';
 import { GatewaysModule } from './gateways/gateways.module';
 import { TaskModule } from './cron-schedule/task.module';
+import { BullModule } from '@nestjs/bullmq';
+import { ConfigModule } from '@nestjs/config';
+import { CustomBullModule } from './bull/bull.modules';
 
 @Module({
   imports: [
@@ -24,15 +27,23 @@ import { TaskModule } from './cron-schedule/task.module';
     TaskModule,
     CategoriesOnPostsModule,
     ProfileModule,
-    ScheduleModule.forRoot(
-      {
+    ScheduleModule.forRoot({
       cronJobs: true,
-     // intervals: false,
-     // timeouts: true,
-      }
-    ),
-   TagsModule,
-   GatewaysModule,
+      // intervals: false,
+      // timeouts: true,
+    }),
+    TagsModule,
+    GatewaysModule,
+    ConfigModule.forRoot({ isGlobal: true }),
+    BullModule.forRoot({
+      connection: {
+        host: 'redis-14174.c252.ap-southeast-1-1.ec2.cloud.redislabs.com',
+        port: 14174,
+        username: 'default',
+        password: 'eXkQEAxkhOX31lmVTIBWeEqKIWtQJfyq',
+      },
+    }),
+    CustomBullModule,
   ],
   controllers: [AppController],
   providers: [AppService],
