@@ -64,17 +64,6 @@ export class PostService {
           tags: { include: { user: true  } },
           postImage: true,
         },
-        // select: {
-        //   id: true,
-        //   title: true,
-        //   authorId: true,
-        //   isPublished: true,
-        //   createdAt: true,
-        //   updatedAt: true,
-        //   categoriesOnPosts: { include: { category: true } },
-        //   tags: { include: { user: true } },
-        //   postImage: true,
-        // }
       });
     this.notiGateways.notifyNewPost(newPost, createPostDto.authorId);
 

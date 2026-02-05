@@ -14,7 +14,7 @@ export class AuthService {
     private dbService: DatabaseService,
   ) {}
 
-  async login(loginDto: LoginDto) {
+  async login1(loginDto: LoginDto) {
     const user = await this.userService.findByEmail(loginDto.email);
     console.log(user)
     if (!user) {
@@ -120,41 +120,41 @@ export class AuthService {
   // }
   // }
 
-  // async login2(dto: LoginDto) {
-  //  // const { email, password } = dto
+  async login(dto: LoginDto) {
+   // const { email, password } = dto
 
-  //   const user = await this.dbService.user.findUnique({
-  //     where: { email:dto.email }
-  //   })
+    const user = await this.dbService.user.findUnique({
+      where: { email:dto.email }
+    })
 
-  //   if (!user) {
-  //     throw new UnauthorizedException('Invalid credentials')
-  //   }
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials')
+    }
 
-  //   const isPasswordValid = await bcrypt.compare(dto.password, user.password)
+    const isPasswordValid = await bcrypt.compare(dto.password, user.password)
 
-  //   if (!isPasswordValid) {
-  //     throw new UnauthorizedException('Invalid credentials')
-  //   }
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials')
+    }
 
-  //   const token = await this.jwtService.signAsync({
-  //     sub: user.id,
-  //     email: user.email,
-  //     roles: user.roles
-  //   })
+    const token = await this.jwtService.signAsync({
+      sub: user.id,
+      email: user.email,
+      roles: user.roles
+    })
 
-  //   return {
-  //     message: 'Login successful',
-  //      user: {
-  //       id: user.id,
-  //       email: user.email,
-  //       name: user.name,
-  //       roles: user.roles,
-  //       createdAt: user.createdAt
-  //     },
-  //     access_token : token,
-  //   }
-  // }
+    return {
+      message: 'Login successful',
+       user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        roles: user.roles,
+        createdAt: user.createdAt
+      },
+      access_token : token,
+    }
+  }
 }
 
 

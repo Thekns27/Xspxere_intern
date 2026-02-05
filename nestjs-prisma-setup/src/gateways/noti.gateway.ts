@@ -1,3 +1,4 @@
+
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -5,6 +6,7 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { Client } from 'socket.io/dist/client';
 import { CreatePostDto } from 'src/post/dto/create-post.dto';
 
 @WebSocketGateway(3002, { namespace: 'notifications' })
@@ -56,3 +58,33 @@ export class NotiGateways implements OnGatewayConnection, OnGatewayDisconnect {
   //   });
   // }
 }
+
+@WebSocketGateway(3002, { namespace: 'notifications', cors: true })
+export class NotiGateways2 implements OnGatewayConnection, OnGatewayDisconnect {
+  @WebSocketServer()
+  server: Server;
+
+  // using room
+  handleConnection(client: Socket) {
+    const userId = client.handshake.query.userId;
+
+    if (userId) {
+      client.join(`user_${userId}`);
+      console.log(`User ${userId} joined room: user_${userId}`);
+    }
+  }
+
+  handleDisconnect(client: Socket) {
+    console.log(`Client disconnected: ${client.id}`);
+  }
+
+  notifyNewPost(postData: CreatePostDto, authorId: number) {
+    this.server.except(`user_${authorId}`).emit('new-post-notification', {
+      message: `New post created!`,
+      postTitle: postData.title,
+      authorId: authorId,
+    });
+  }
+}
+
+
