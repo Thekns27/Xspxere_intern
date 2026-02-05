@@ -13,8 +13,9 @@ import { TagsModule } from './tags/tags.module';
 import { GatewaysModule } from './gateways/gateways.module';
 import { TaskModule } from './cron-schedule/task.module';
 import { BullModule } from '@nestjs/bullmq';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CustomBullModule } from './bull/bull.modules';
+import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
   imports: [
@@ -27,11 +28,7 @@ import { CustomBullModule } from './bull/bull.modules';
     TaskModule,
     CategoriesOnPostsModule,
     ProfileModule,
-    ScheduleModule.forRoot({
-      cronJobs: true,
-      // intervals: false,
-      // timeouts: true,
-    }),
+    ScheduleModule.forRoot({ cronJobs: true }),
     TagsModule,
     GatewaysModule,
     ConfigModule.forRoot({ isGlobal: true }),
@@ -44,6 +41,12 @@ import { CustomBullModule } from './bull/bull.modules';
       },
     }),
     CustomBullModule,
+    MongooseModule.forRootAsync({
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get<string>('DATABASE_URI'),
+      }),
+      inject: [ConfigService],
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],
